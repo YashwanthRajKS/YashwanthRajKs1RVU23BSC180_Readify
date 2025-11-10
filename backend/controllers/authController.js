@@ -2,18 +2,20 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+//
 // ✅ Register User
+//
 exports.registerUser = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;   // ✅ role included
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser)
       return res.status(400).json({ message: 'User already exists' });
 
-    // ⚙️ Let Mongoose pre-save hook hash the password automatically
-    const user = await User.create({ name, email, password });
+    // Mongoose pre-save hook hashes password
+    const user = await User.create({ name, email, password, role });
 
     // Create token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -27,6 +29,7 @@ exports.registerUser = async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,     // ✅ ADDED
       },
     });
   } catch (err) {
@@ -35,7 +38,10 @@ exports.registerUser = async (req, res, next) => {
   }
 };
 
+
+//
 // ✅ Login User
+//
 exports.loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -62,6 +68,7 @@ exports.loginUser = async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,      // ✅ ADDED
       },
     });
   } catch (err) {
