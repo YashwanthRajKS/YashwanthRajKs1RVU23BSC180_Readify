@@ -18,15 +18,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch("http://localhost:5000/api/books", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      let books = await res.json();   // ✅ ARRAY — already correct
+      const books = await res.json();
 
       if (!books || books.length === 0) {
-        bookTable.innerHTML = `
-          <tr>
-            <td colspan="4" style="text-align:center;">No books found</td>
-          </tr>
-        `;
+        bookTable.innerHTML = `<tr><td colspan="5" style="text-align:center;">No books found</td></tr>`;
         return;
       }
 
@@ -43,17 +38,17 @@ document.addEventListener("DOMContentLoaded", () => {
     bookTable.innerHTML = books
       .map(
         (b) => `
-        <tr>
+        <tr id="row-${b._id}">
           <td>${b.title}</td>
           <td>${(b.authors || []).join(", ")}</td>
           <td>${(b.categories || []).join(", ")}</td>
           <td>
-            <button class="btn-small btn-delete" onclick="deleteBook('${b._id}')">
-              Delete
-            </button>
+            <button class="btn-small" onclick="editBook('${b._id}')">Edit</button>
           </td>
-        </tr>
-      `
+          <td>
+            <button class="btn-small btn-delete" onclick="deleteBook('${b._id}')">Delete</button>
+          </td>
+        </tr>`
       )
       .join("");
   }
@@ -96,6 +91,56 @@ document.addEventListener("DOMContentLoaded", () => {
     await fetch(`http://localhost:5000/api/books/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
+    });
+
+    loadBooks();
+  };
+
+  /* ===============================
+      ✏️ EDIT BOOK (INLINE)
+  =============================== */
+  window.editBook = function (id) {
+    const row = document.getElementById(`row-${id}`);
+    const cells = row.children;
+
+    const title = cells[0].innerText;
+    const authors = cells[1].innerText;
+    const categories = cells[2].innerText;
+
+    row.innerHTML = `
+      <td><input class="edit-input" id="edit-title-${id}" value="${title}" /></td>
+      <td><input class="edit-input" id="edit-authors-${id}" value="${authors}" /></td>
+      <td><input class="edit-input" id="edit-categories-${id}" value="${categories}" /></td>
+      <td><button class="btn-small" onclick="saveBook('${id}')">Save</button></td>
+      <td><button class="btn-small btn-delete" onclick="loadBooks()">Cancel</button></td>
+    `;
+  };
+
+  /* ===============================
+      💾 SAVE EDITED BOOK
+  =============================== */
+  window.saveBook = async function (id) {
+    const newTitle = document.getElementById(`edit-title-${id}`).value;
+    const newAuthors = document
+      .getElementById(`edit-authors-${id}`)
+      .value.split(",")
+      .map((x) => x.trim());
+    const newCategories = document
+      .getElementById(`edit-categories-${id}`)
+      .value.split(",")
+      .map((x) => x.trim());
+
+    await fetch(`http://localhost:5000/api/books/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: newTitle,
+        authors: newAuthors,
+        categories: newCategories,
+      }),
     });
 
     loadBooks();

@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>⚙️ Admin Dashboard</title>
-
   <link rel="stylesheet" href="style.css" />
 
   <style>
@@ -57,13 +56,20 @@
     .btn-small:hover {
       transform: scale(1.08);
     }
-  </style>
 
+    input.edit-input {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: white;
+      text-align: center;
+      border-radius: 6px;
+      padding: 4px;
+      width: 90%;
+    }
+  </style>
 </head>
 
 <body>
-
-  <!-- ✅ HEADER -->
   <header>
     <h1>⚙️ Admin Dashboard</h1>
     <nav>
@@ -72,40 +78,33 @@
   </header>
 
   <main>
-
-    <!-- ✅ BOOK LIST -->
     <div class="admin-section">
       <h2>📚 All Books</h2>
-
       <table>
         <thead>
           <tr>
             <th>Title</th>
             <th>Authors</th>
             <th>Categories</th>
+            <th>Edit</th>
             <th>Delete</th>
           </tr>
         </thead>
-
         <tbody id="bookTable"></tbody>
       </table>
     </div>
 
-    <!-- ✅ ADD BOOK -->
     <div class="admin-section">
       <h2>➕ Add Book</h2>
-
       <form id="addBookForm">
         <input id="title" placeholder="Title" required />
         <input id="authors" placeholder="Authors (comma separated)" required />
         <input id="categories" placeholder="Categories (comma separated)" required />
         <textarea id="description" placeholder="Description"></textarea>
         <input id="pdfUrl" placeholder="PDF URL" required />
-
         <button type="submit" class="btn">Add Book</button>
       </form>
     </div>
-
   </main>
 
   <script src="admin.js"></script>

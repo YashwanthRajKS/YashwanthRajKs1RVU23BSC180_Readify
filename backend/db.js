@@ -1,16 +1,18 @@
 // backend/db.js
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const connectDB = async () => {
-  const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/readify';
+  const mongoUri =
+    process.env.MONGO_URI || "mongodb://127.0.0.1:27017/readify";
+
   try {
     await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
-      useUnifiedTopology: true
+      useUnifiedTopology: true,
     });
-    console.log('MongoDB connected');
+    console.log("✅ MongoDB connected successfully");
   } catch (err) {
-    console.error('MongoDB connection error:', err);
+    console.error("❌ MongoDB connection error:", err);
     process.exit(1);
   }
 };
