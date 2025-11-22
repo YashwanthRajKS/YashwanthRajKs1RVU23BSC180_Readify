@@ -17,7 +17,9 @@
     "helmet": "^6.2.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.8.7",
-    "morgan": "^1.10.1"
+    "morgan": "^1.10.1",
+    "pdfjs-dist": "^5.4.394",
+    "react-pdf": "^10.2.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"

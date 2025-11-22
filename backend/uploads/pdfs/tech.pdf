@@ -1,32 +1,68 @@
-%PDF-1.1
+%PDF-1.4
+%“Œ‹ž ReportLab Generated PDF document http://www.reportlab.com
 1 0 obj
-<< /Type /Catalog /Pages 2 0 R >>
+<<
+/F1 2 0 R
+>>
 endobj
 2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+<<
+/BaseFont /Helvetica /Encoding /WinAnsiEncoding /Name /F1 /Subtype /Type1 /Type /Font
+>>
 endobj
 3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+<<
+/Contents 7 0 R /MediaBox [ 0 0 612 792 ] /Parent 6 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
 endobj
 4 0 obj
-<< /Length 73 >>
-stream
-BT /F1 12 Tf 72 720 Td (Beginner Guide - CPU, RAM, Storage basics.) Tj ET
-endstream
+<<
+/PageMode /UseNone /Pages 6 0 R /Type /Catalog
+>>
 endobj
 5 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+<<
+/Author (\(anonymous\)) /CreationDate (D:20251122072056+00'00') /Creator (\(unspecified\)) /Keywords () /ModDate (D:20251122072056+00'00') /Producer (ReportLab PDF Library - www.reportlab.com) 
+  /Subject (\(unspecified\)) /Title (\(anonymous\)) /Trapped /False
+>>
+endobj
+6 0 obj
+<<
+/Count 1 /Kids [ 3 0 R ] /Type /Pages
+>>
+endobj
+7 0 obj
+<<
+/Filter [ /ASCII85Decode /FlateDecode ] /Length 376
+>>
+stream
+Gat=fc"b-M&;9M$ME/+.Um>LP5IWPX;!=SV]mq:WMGdStV%(C^?TARL;I`7"Ur0K"1OL`@Sr0(ff`I3SpWj8L!8i?mZP*0N:H\NufQhMB`$-k_E9cP_?I2hYA%tWM\,B1G:Fa>VEUtNa!aC:-\TcnVh;<f+_!_L'pJcVnlID!Z?T5ZVN?84iSWQBD]Jrg?)QfN/fIP]FZpO2?;\<&ei33U'73b@I-I^N<=LtNF&kfL$F=W8([s<G5gW')""6nS.8B,?LC].=f[XO_8#Urc4+HK&W%)IU4+M,i:.EH`MVl?o^=O+RnP0/089!p-=goBHNVn)'$.RYSD_,-1FGZ'\K@NS1LnU)!>)]BP*$2H:bU0=(J(YLb@/^Ii~>endstream
 endobj
 xref
-0 6
+0 8
 0000000000 65535 f 
-0000000010 00000 n 
-0000000060 00000 n 
-0000000111 00000 n 
-0000000230 00000 n 
-0000000331 00000 n 
+0000000073 00000 n 
+0000000104 00000 n 
+0000000211 00000 n 
+0000000404 00000 n 
+0000000472 00000 n 
+0000000755 00000 n 
+0000000814 00000 n 
 trailer
-<< /Size 6 /Root 1 0 R >>
+<<
+/ID 
+[<70a586232b17feacb846476b1bc15365><70a586232b17feacb846476b1bc15365>]
+% ReportLab generated PDF document -- digest (http://www.reportlab.com)
+
+/Info 5 0 R
+/Root 4 0 R
+/Size 8
+>>
 startxref
-420
+1280
 %%EOF
