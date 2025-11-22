@@ -41,7 +41,16 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 // PDF Static Folder
-app.use("/pdfs", express.static(path.join(__dirname, "uploads/pdfs")));
+app.use(
+  "/pdfs",
+  express.static(path.join(__dirname, "uploads/pdfs"), {
+    setHeaders: (res, path) => {
+      if (path.endsWith(".pdf")) {
+        res.setHeader("Content-Type", "application/pdf");
+      }
+    },
+  })
+);
 
 // ---------- Test Route (MUST HAVE) ----------
 app.get("/api/test", (req, res) => {
