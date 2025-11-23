@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
-  <!-- 🔥 DICTIONARY POPUP STYLE -->
+  <!-- DICTIONARY POPUP STYLE -->
   <style>
     .dictionary-box {
       position: fixed;
@@ -19,42 +19,37 @@
       color: white;
       border-radius: 12px;
       display: none;
-      z-index: 9999;
+      z-index: 99999;
       box-shadow: 0 0 10px rgba(255,255,255,0.2);
     }
-    .dict-title {
-      font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-    .close-dict {
-      float: right;
-      cursor: pointer;
-      font-size: 18px;
-    }
-    .dict-input {
-      width: 100%;
-      padding: 8px;
-      border-radius: 6px;
-      border: none;
-      margin-top: 10px;
-      margin-bottom: 10px;
-    }
+    .dict-title { font-size: 20px; font-weight: bold; margin-bottom: 8px; }
+    .close-dict { float: right; cursor: pointer; font-size: 18px; }
+    .dict-input { width: 100%; padding: 8px; border-radius: 6px; border: none; margin-top: 10px; margin-bottom: 10px; }
 
-    /* pdf.js text layer */
+    /* text layer styles - allow selection */
     .textLayer {
       position: absolute;
       top: 0;
       left: 0;
-      pointer-events: none; 
+      z-index: 5;               /* above canvas */
+      pointer-events: auto;     /* allow selection & double-click */
+      -webkit-user-select: text;
+      user-select: text;
     }
 
+    /* Each text span placed by pdfjs */
     .textLayer span {
       position: absolute;
       white-space: pre;
       transform-origin: 0% 0%;
-      cursor: text;
+      /* make the text invisible so underlying canvas shows, but still selectable */
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      /* Ensure selected highlight is visible */
+      background-clip: text;
     }
+
+    /* keep other layout styles untouched (you can add more as needed) */
   </style>
 </head>
 
@@ -66,20 +61,20 @@
 
   <main class="reader-main">
 
-    <!-- PDF SECTION -->
+    <!-- CONTROLS -->
     <div class="controls">
       <button id="prevBtn" class="btn nav-btn">Previous</button>
       <button id="nextBtn" class="btn nav-btn">Next</button>
       <span id="pageNum" class="page-num"></span>
     </div>
 
-    <!-- 🔥 UPDATED PDF WRAPPER (added textLayer) -->
+    <!-- PDF WRAPPER: canvas + textLayer -->
     <div class="pdf-wrapper" style="position:relative;">
       <canvas id="pdfViewer"></canvas>
-      <div id="textLayer" class="textLayer"></div>
+      <div id="textLayer" class="textLayer" aria-hidden="false"></div>
     </div>
 
-    <!-- ⭐ RATING + REVIEW -->
+    <!-- RATING + REVIEW -->
     <div class="rating-review-container">
       <div class="rating-section">
         <div class="section-title">⭐ Rate this Book</div>
@@ -95,7 +90,7 @@
     </div>
   </main>
 
-  <!-- 🔥 DICTIONARY POPUP BOX -->
+  <!-- DICTIONARY POPUP -->
   <div id="dictionaryBox" class="dictionary-box">
     <span class="close-dict" onclick="closeDictionary()">✖</span>
     <div class="dict-title">📘 Dictionary</div>
@@ -107,51 +102,68 @@
   <script>
     const token = localStorage.getItem("token");
     const bookId = localStorage.getItem("bookId");
-
     if (!token || !bookId) window.location.href = "dashboard.html";
 
-    let pdfDoc = null,
-      pageNum = 1,
-      pageRendering = false,
-      pageNumPending = null;
+    let pdfDoc = null, pageNum = 1, pageRendering = false, pageNumPending = null;
 
     async function getPdfUrl() {
-      const res = await fetch(
-        `https://yashwanthrajks1rvu23bsc180-readify-1.onrender.com/api/books/${bookId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await fetch(`https://yashwanthrajks1rvu23bsc180-readify-1.onrender.com/api/books/${bookId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const book = await res.json();
-
-      function getFilename(path) {
-        return path ? path.split("/").pop() : "";
-      }
-
-      return book.pdfUrl
-        ? `https://yashwanthrajks1rvu23bsc180-readify-1.onrender.com/pdfs/${getFilename(book.pdfUrl)}`
-        : "";
+      function getFilename(path){ return path ? path.split("/").pop() : ""; }
+      return book.pdfUrl ? `https://yashwanthrajks1rvu23bsc180-readify-1.onrender.com/pdfs/${getFilename(book.pdfUrl)}` : "";
     }
 
-    /* ----------------------------------------------------
-       🔥 FULLY UPDATED renderPage() WITH TEXT LAYER
-    ---------------------------------------------------- */
+    async function markAsRead() {
+      await fetch("https://yashwanthrajks1rvu23bsc180-readify-1.onrender.com/api/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ bookId }),
+      });
+    }
+
+    async function submitRating() {
+      const rating = document.getElementById("ratingInput").value;
+      if (!rating) return alert("Enter rating");
+      const res = await fetch("https://yashwanthrajks1rvu23bsc180-readify-1.onrender.com/api/ratings", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ bookId, rating }),
+      });
+      alert(res.ok ? "✅ Rating submitted" : "❌ Rating failed");
+    }
+
+    async function submitReview() {
+      const comment = document.getElementById("reviewInput").value;
+      if (!comment) return alert("Enter review comment");
+      const res = await fetch("https://yashwanthrajks1rvu23bsc180-readify-1.onrender.com/api/reviews", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ bookId, comment }),
+      });
+      alert(res.ok ? "✅ Review submitted" : "❌ Review failed");
+    }
+
+    /* RENDER PAGE + TEXT LAYER */
     function renderPage(num) {
       pageRendering = true;
-
       pdfDoc.getPage(num).then(async function (page) {
-        const viewport = page.getViewport({ scale: 1.2 });
+        const scale = 1.2;
+        const viewport = page.getViewport({ scale });
         const canvas = document.getElementById("pdfViewer");
         const ctx = canvas.getContext("2d");
 
+        // size canvas
         canvas.height = viewport.height;
         canvas.width = viewport.width;
 
-        // Render PDF page to canvas
+        // render canvas
         const renderTask = page.render({ canvasContext: ctx, viewport });
 
-        // Render text layer
+        // render text layer (selectable)
         const textContent = await page.getTextContent();
         const textLayerDiv = document.getElementById("textLayer");
-
         textLayerDiv.innerHTML = "";
         textLayerDiv.style.height = viewport.height + "px";
         textLayerDiv.style.width = viewport.width + "px";
@@ -160,14 +172,13 @@
           textContent,
           container: textLayerDiv,
           viewport,
-          textDivs: [],
+          textDivs: []
         });
 
         await renderTask.promise;
 
         pageRendering = false;
-        document.getElementById("pageNum").textContent =
-          `Page ${pageNum} of ${pdfDoc.numPages}`;
+        document.getElementById("pageNum").textContent = `Page ${pageNum} of ${pdfDoc.numPages}`;
 
         if (pageNumPending !== null) {
           renderPage(pageNumPending);
@@ -181,16 +192,15 @@
       else renderPage(num);
     }
 
-    /* ------------------------
-       FIXED NEXT BUTTON ❗
-    -------------------------*/
     document.getElementById("nextBtn").addEventListener("click", function () {
+      if (!pdfDoc) return;
       if (pageNum >= pdfDoc.numPages) return;
       pageNum++;
       queueRenderPage(pageNum);
     });
 
     document.getElementById("prevBtn").addEventListener("click", function () {
+      if (!pdfDoc) return;
       if (pageNum <= 1) return;
       pageNum--;
       queueRenderPage(pageNum);
@@ -198,21 +208,24 @@
 
     // Load PDF
     getPdfUrl().then((url) => {
-      if (url) {
-        pdfjsLib.getDocument(url).promise.then(function (pdfDoc_) {
-          pdfDoc = pdfDoc_;
-          pageNum = 1;
-          renderPage(pageNum);
-        });
+      if (!url) {
+        document.querySelector(".pdf-wrapper").innerHTML = "<p>PDF not found</p>";
+        return;
       }
+      markAsRead();
+      pdfjsLib.getDocument(url).promise.then(function (pdfDoc_) {
+        pdfDoc = pdfDoc_;
+        pageNum = 1;
+        renderPage(pageNum);
+      }).catch(err => {
+        document.querySelector(".pdf-wrapper").innerHTML = `<p>PDF failed to load: ${err.message}</p>`;
+      });
     });
 
-    /* 🔥 Dictionary Logic */
+    /* Dictionary: double-click selection */
     document.addEventListener("dblclick", () => {
       const word = window.getSelection().toString().trim();
-      if (word.length > 0 && /^[A-Za-z]+$/.test(word)) {
-        openDictionary(word);
-      }
+      if (word.length > 0 && /^[A-Za-z]+$/.test(word)) openDictionary(word);
     });
 
     function openDictionary(word) {
@@ -220,35 +233,23 @@
       document.getElementById("dictSearch").value = word;
       searchWord();
     }
-
-    function closeDictionary() {
-      document.getElementById("dictionaryBox").style.display = "none";
-    }
+    function closeDictionary() { document.getElementById("dictionaryBox").style.display = "none"; }
 
     async function searchWord() {
       const word = document.getElementById("dictSearch").value.trim();
       if (!word) return;
-
       const resultBox = document.getElementById("dictMeaning");
       resultBox.textContent = "Loading...";
-
       try {
         const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
         const data = await res.json();
-
-        if (!data[0]) {
-          resultBox.textContent = "No meaning found.";
-          return;
-        }
-
+        if (!data[0]) { resultBox.textContent = "No meaning found."; return; }
         const meaning = data[0].meanings[0].definitions[0].definition;
         resultBox.textContent = meaning;
-
       } catch (err) {
         resultBox.textContent = "Error fetching meaning.";
       }
     }
   </script>
-
 </body>
 </html>
