@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
-  <!-- DICTIONARY POPUP STYLE -->
+  <!-- ⭐ DICTIONARY + TEXTLAYER FIXED STYLE -->
   <style>
     .dictionary-box {
       position: fixed;
@@ -26,30 +26,23 @@
     .close-dict { float: right; cursor: pointer; font-size: 18px; }
     .dict-input { width: 100%; padding: 8px; border-radius: 6px; border: none; margin-top: 10px; margin-bottom: 10px; }
 
-    /* text layer styles - allow selection */
+    /* ✔ FIXED TEXTLAYER (Correct way, no ghost layer, no blur) */
     .textLayer {
       position: absolute;
       top: 0;
       left: 0;
-      z-index: 5;               /* above canvas */
-      pointer-events: auto;     /* allow selection & double-click */
+      z-index: 5;
+      pointer-events: auto;
       -webkit-user-select: text;
       user-select: text;
     }
 
-    /* Each text span placed by pdfjs */
     .textLayer span {
       position: absolute;
       white-space: pre;
       transform-origin: 0% 0%;
-      /* make the text invisible so underlying canvas shows, but still selectable */
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-      /* Ensure selected highlight is visible */
-      background-clip: text;
+      opacity: 0;     /* 👈 FINAL FIX — prevents blur & ghost text */
     }
-
-    /* keep other layout styles untouched (you can add more as needed) */
   </style>
 </head>
 
@@ -68,10 +61,10 @@
       <span id="pageNum" class="page-num"></span>
     </div>
 
-    <!-- PDF WRAPPER: canvas + textLayer -->
+    <!-- PDF WRAPPER -->
     <div class="pdf-wrapper" style="position:relative;">
       <canvas id="pdfViewer"></canvas>
-      <div id="textLayer" class="textLayer" aria-hidden="false"></div>
+      <div id="textLayer" class="textLayer"></div>
     </div>
 
     <!-- RATING + REVIEW -->
@@ -136,7 +129,7 @@
 
     async function submitReview() {
       const comment = document.getElementById("reviewInput").value;
-      if (!comment) return alert("Enter review comment");
+      if (!comment) return alert("Enter review");
       const res = await fetch("https://yashwanthrajks1rvu23bsc180-readify-1.onrender.com/api/reviews", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -145,28 +138,27 @@
       alert(res.ok ? "✅ Review submitted" : "❌ Review failed");
     }
 
-    /* RENDER PAGE + TEXT LAYER */
+    /* RENDER PAGE + SELECTABLE TEXT LAYER */
     function renderPage(num) {
       pageRendering = true;
+
       pdfDoc.getPage(num).then(async function (page) {
         const scale = 1.2;
         const viewport = page.getViewport({ scale });
+
         const canvas = document.getElementById("pdfViewer");
         const ctx = canvas.getContext("2d");
 
-        // size canvas
-        canvas.height = viewport.height;
         canvas.width = viewport.width;
+        canvas.height = viewport.height;
 
-        // render canvas
         const renderTask = page.render({ canvasContext: ctx, viewport });
 
-        // render text layer (selectable)
         const textContent = await page.getTextContent();
         const textLayerDiv = document.getElementById("textLayer");
         textLayerDiv.innerHTML = "";
-        textLayerDiv.style.height = viewport.height + "px";
         textLayerDiv.style.width = viewport.width + "px";
+        textLayerDiv.style.height = viewport.height + "px";
 
         pdfjsLib.renderTextLayer({
           textContent,
@@ -192,40 +184,39 @@
       else renderPage(num);
     }
 
-    document.getElementById("nextBtn").addEventListener("click", function () {
-      if (!pdfDoc) return;
-      if (pageNum >= pdfDoc.numPages) return;
-      pageNum++;
-      queueRenderPage(pageNum);
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      if (pageNum < pdfDoc.numPages) {
+        pageNum++;
+        queueRenderPage(pageNum);
+      }
     });
 
-    document.getElementById("prevBtn").addEventListener("click", function () {
-      if (!pdfDoc) return;
-      if (pageNum <= 1) return;
-      pageNum--;
-      queueRenderPage(pageNum);
+    document.getElementById("prevBtn").addEventListener("click", () => {
+      if (pageNum > 1) {
+        pageNum--;
+        queueRenderPage(pageNum);
+      }
     });
 
-    // Load PDF
     getPdfUrl().then((url) => {
       if (!url) {
         document.querySelector(".pdf-wrapper").innerHTML = "<p>PDF not found</p>";
         return;
       }
       markAsRead();
-      pdfjsLib.getDocument(url).promise.then(function (pdfDoc_) {
-        pdfDoc = pdfDoc_;
+      pdfjsLib.getDocument(url).promise.then((pdf) => {
+        pdfDoc = pdf;
         pageNum = 1;
         renderPage(pageNum);
       }).catch(err => {
-        document.querySelector(".pdf-wrapper").innerHTML = `<p>PDF failed to load: ${err.message}</p>`;
+        document.querySelector(".pdf-wrapper").innerHTML = `<p>Load error: ${err.message}</p>`;
       });
     });
 
-    /* Dictionary: double-click selection */
+    /* Double click dictionary */
     document.addEventListener("dblclick", () => {
       const word = window.getSelection().toString().trim();
-      if (word.length > 0 && /^[A-Za-z]+$/.test(word)) openDictionary(word);
+      if (word && /^[A-Za-z]+$/.test(word)) openDictionary(word);
     });
 
     function openDictionary(word) {
@@ -233,21 +224,24 @@
       document.getElementById("dictSearch").value = word;
       searchWord();
     }
-    function closeDictionary() { document.getElementById("dictionaryBox").style.display = "none"; }
+
+    function closeDictionary() {
+      document.getElementById("dictionaryBox").style.display = "none";
+    }
 
     async function searchWord() {
       const word = document.getElementById("dictSearch").value.trim();
       if (!word) return;
-      const resultBox = document.getElementById("dictMeaning");
-      resultBox.textContent = "Loading...";
+
+      const meaningBox = document.getElementById("dictMeaning");
+      meaningBox.textContent = "Loading...";
+
       try {
         const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
         const data = await res.json();
-        if (!data[0]) { resultBox.textContent = "No meaning found."; return; }
-        const meaning = data[0].meanings[0].definitions[0].definition;
-        resultBox.textContent = meaning;
-      } catch (err) {
-        resultBox.textContent = "Error fetching meaning.";
+        meaningBox.textContent = data[0]?.meanings[0]?.definitions[0]?.definition || "No meaning found.";
+      } catch {
+        meaningBox.textContent = "Error fetching meaning.";
       }
     }
   </script>
